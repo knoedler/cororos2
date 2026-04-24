@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>odrive_hardware_interface</name>
+  <version>0.0.1</version>
+  <description>ROS 2 control hardware interface for ODrive-backed cororos2 robots.</description>
+  <maintainer email="gabriela@example.com">Gabriela</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>ament_index_cpp</depend>
+  <depend>controller_manager</depend>
+  <depend>hardware_interface</depend>
+  <depend>pluginlib</depend>
+  <exec_depend>python3-pip</exec_depend>
+  <exec_depend>python3-odrive-pip</exec_depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_lifecycle</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

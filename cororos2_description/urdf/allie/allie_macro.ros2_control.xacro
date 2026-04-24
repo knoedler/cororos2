@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+
+  <xacro:macro name="allie_ros2_control" params="
+               name
+               prefix
+               use_mock_hardware:=false
+               mock_sensor_commands:=false
+               sim_gazebo_classic:=false
+               sim_gazebo:=false
+               simulation_controllers
+               device_path:=/dev/serial/by-id/usb-Pololu_Corporation_Pololu_Micro_Maestro_6-Servo_Controller_00467337-if00
+               channel_fl:=0
+               channel_fr:=1
+               channel_rl:=2
+               channel_rr:=3
+               pwm_min:=1000
+               pwm_neutral:=1500
+               pwm_max:=2000
+               min_active_pwm_delta:=100
+               wheel_radius:=0.2
+               max_wheel_speed_mps:=1.0
+               invert_left:=false
+               invert_right:=false
+               invert_fl:=false
+               invert_fr:=false
+               invert_rl:=false
+               invert_rr:=false">
+
+    <ros2_control name="${name}" type="system">
+      <hardware>
+        <xacro:if value="${use_mock_hardware}">
+          <plugin>mock_components/GenericSystem</plugin>
+          <param name="mock_sensor_commands">${mock_sensor_commands}</param>
+        </xacro:if>
+        <xacro:if value="${sim_gazebo_classic}">
+          <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+        </xacro:if>
+        <xacro:if value="${sim_gazebo}">
+          <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+        </xacro:if>
+        <xacro:unless value="${use_mock_hardware or sim_gazebo_classic or sim_gazebo}">
+          <plugin>pwm_hardware_interface/PwmHardwareInterface</plugin>
+          <param name="device_path">${device_path}</param>
+          <param name="channel_fl">${channel_fl}</param>
+          <param name="channel_fr">${channel_fr}</param>
+          <param name="channel_rl">${channel_rl}</param>
+          <param name="channel_rr">${channel_rr}</param>
+          <param name="pwm_min">${pwm_min}</param>
+          <param name="pwm_neutral">${pwm_neutral}</param>
+          <param name="pwm_max">${pwm_max}</param>
+          <param name="min_active_pwm_delta">${min_active_pwm_delta}</param>
+          <param name="wheel_radius">${wheel_radius}</param>
+          <param name="max_wheel_speed_mps">${max_wheel_speed_mps}</param>
+          <param name="invert_left">${invert_left}</param>
+          <param name="invert_right">${invert_right}</param>
+          <param name="invert_fl">${invert_fl}</param>
+          <param name="invert_fr">${invert_fr}</param>
+          <param name="invert_rl">${invert_rl}</param>
+          <param name="invert_rr">${invert_rr}</param>
+        </xacro:unless>
+      </hardware>
+
+      <joint name="${prefix}front_left_wheel_joint">
+        <command_interface name="velocity" />
+        <state_interface name="position">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity" />
+      </joint>
+      <joint name="${prefix}front_right_wheel_joint">
+        <command_interface name="velocity" />
+        <state_interface name="position">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity" />
+      </joint>
+      <joint name="${prefix}rear_left_wheel_joint">
+        <command_interface name="velocity" />
+        <state_interface name="position">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity" />
+      </joint>
+      <joint name="${prefix}rear_right_wheel_joint">
+        <command_interface name="velocity" />
+        <state_interface name="position">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity" />
+      </joint>
+    </ros2_control>
+
+    <xacro:if value="${sim_gazebo_classic}">
+      <gazebo>
+        <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+          <parameters>${simulation_controllers}</parameters>
+        </plugin>
+      </gazebo>
+    </xacro:if>
+
+    <xacro:if value="${sim_gazebo}">
+      <gazebo>
+        <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+          <parameters>${simulation_controllers}</parameters>
+          <controller_manager_node_name>controller_manager</controller_manager_node_name>
+        </plugin>
+      </gazebo>
+    </xacro:if>
+
+  </xacro:macro>
+</robot>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+
+  <xacro:macro name="cornelius_ros2_control" params="
+               name
+               prefix
+               use_mock_hardware:=false
+               mock_sensor_commands:=false
+               sim_gazebo_classic:=false
+               sim_gazebo:=false
+               simulation_controllers
+               roboclaw_device:=/dev/serial/by-id/usb-03eb_USB_Roboclaw_2x60A-if00
+               roboclaw_baud:=115200
+               roboclaw_address:=128
+               roboclaw_use_encoder:=false
+               roboclaw_max_speed:=1.0
+               roboclaw_ticks_at_max_speed:=32760.0
+               roboclaw_acceleration:=32000
+               roboclaw_ticks_per_meter:=4342.2
+               roboclaw_wheel_radius:=0.13
+               roboclaw_status_interval_sec:=2.0">
+
+    <ros2_control name="${name}" type="system">
+      <hardware>
+        <xacro:if value="${use_mock_hardware}">
+          <plugin>mock_components/GenericSystem</plugin>
+          <param name="mock_sensor_commands">${mock_sensor_commands}</param>
+        </xacro:if>
+        <xacro:if value="${sim_gazebo_classic}">
+          <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+        </xacro:if>
+        <xacro:if value="${sim_gazebo}">
+          <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+        </xacro:if>
+        <xacro:unless value="${use_mock_hardware or sim_gazebo_classic or sim_gazebo}">
+          <plugin>roboclaw_hardware_interface/RoboclawHardwareInterface</plugin>
+          <param name="device">${roboclaw_device}</param>
+          <param name="baud">${roboclaw_baud}</param>
+          <param name="address">${roboclaw_address}</param>
+          <param name="use_encoder">${roboclaw_use_encoder}</param>
+          <param name="max_speed">${roboclaw_max_speed}</param>
+          <param name="ticks_at_max_speed">${roboclaw_ticks_at_max_speed}</param>
+          <param name="acceleration">${roboclaw_acceleration}</param>
+          <param name="ticks_per_meter">${roboclaw_ticks_per_meter}</param>
+          <param name="wheel_radius">${roboclaw_wheel_radius}</param>
+          <param name="status_interval_sec">${roboclaw_status_interval_sec}</param>
+        </xacro:unless>
+      </hardware>
+
+      <!-- Cornelius uses one hidden drive wheel on each side. -->
+      <joint name="${prefix}left_track_joint">
+        <command_interface name="velocity" />
+        <state_interface name="position">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity" />
+      </joint>
+      <joint name="${prefix}right_track_joint">
+        <command_interface name="velocity" />
+        <state_interface name="position">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity" />
+      </joint>
+    </ros2_control>
+
+    <xacro:if value="${sim_gazebo_classic}">
+      <gazebo>
+        <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+          <parameters>${simulation_controllers}</parameters>
+        </plugin>
+      </gazebo>
+    </xacro:if>
+
+    <xacro:if value="${sim_gazebo}">
+      <gazebo>
+        <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+          <parameters>${simulation_controllers}</parameters>
+          <controller_manager_node_name>controller_manager</controller_manager_node_name>
+        </plugin>
+      </gazebo>
+    </xacro:if>
+  </xacro:macro>
+
+</robot>

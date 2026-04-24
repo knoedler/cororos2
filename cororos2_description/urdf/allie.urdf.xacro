@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="allie">
+
+  <!-- Use this if parameters are set from the launch file, otherwise delete -->
+  <xacro:arg name="prefix" default=""/>
+
+  <xacro:arg name="use_mock_hardware" default="false"/>
+  <xacro:arg name="mock_sensor_commands" default="false"/>
+  <xacro:arg name="sim_gazebo_classic" default="false"/>
+  <xacro:arg name="sim_gazebo" default="false"/>
+  <xacro:arg name="simulation_controllers" default=""/>
+  <xacro:arg name="attach_world" default="true"/>
+  <xacro:arg name="pwm_config_file" default="$(find cororos2_bringup)/config/pwm.yaml"/>
+  <xacro:property name="pwm_config" value="${xacro.load_yaml('$(arg pwm_config_file)')}"/>
+  <xacro:arg name="device_path" default="${pwm_config['device_path']}"/>
+  <xacro:arg name="channel_fl" default="${pwm_config['channel_fl']}"/>
+  <xacro:arg name="channel_fr" default="${pwm_config['channel_fr']}"/>
+  <xacro:arg name="channel_rl" default="${pwm_config['channel_rl']}"/>
+  <xacro:arg name="channel_rr" default="${pwm_config['channel_rr']}"/>
+  <xacro:arg name="pwm_min" default="${pwm_config['pwm_min']}"/>
+  <xacro:arg name="pwm_neutral" default="${pwm_config['pwm_neutral']}"/>
+  <xacro:arg name="pwm_max" default="${pwm_config['pwm_max']}"/>
+  <xacro:arg name="min_active_pwm_delta" default="${pwm_config['min_active_pwm_delta']}"/>
+  <xacro:arg name="wheel_radius" default="${pwm_config['wheel_radius']}"/>
+  <xacro:arg name="max_wheel_speed_mps" default="${pwm_config['max_wheel_speed_mps']}"/>
+  <xacro:arg name="invert_left" default="${pwm_config['invert_left']}"/>
+  <xacro:arg name="invert_right" default="${pwm_config['invert_right']}"/>
+  <xacro:arg name="invert_fl" default="${pwm_config.get('invert_fl', pwm_config['invert_left'])}"/>
+  <xacro:arg name="invert_fr" default="${pwm_config.get('invert_fr', pwm_config['invert_right'])}"/>
+  <xacro:arg name="invert_rl" default="${pwm_config.get('invert_rl', pwm_config['invert_left'])}"/>
+  <xacro:arg name="invert_rr" default="${pwm_config.get('invert_rr', pwm_config['invert_right'])}"/>
+
+  <xacro:include filename="$(find cororos2_description)/urdf/allie/allie_macro.xacro"/>
+  <xacro:include filename="$(find cororos2_description)/urdf/allie/allie_macro.ros2_control.xacro"/>
+
+  <xacro:if value="$(arg attach_world)">
+    <!-- create link fixed to the "world" -->
+    <link name="world"/>
+
+    <!-- Load robot's macro with parameters -->
+    <!-- set prefix if multiple robots are used -->
+    <xacro:allie prefix="$(arg prefix)" parent="world">
+      <origin xyz="0 0 0" rpy="0 0 0"/>          <!-- position robot in the world -->
+    </xacro:allie>
+  </xacro:if>
+
+  <xacro:unless value="$(arg attach_world)">
+    <xacro:allie prefix="$(arg prefix)" parent="">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:allie>
+  </xacro:unless>
+
+  <xacro:allie_ros2_control
+    name="allie"
+    prefix="$(arg prefix)"
+    use_mock_hardware="$(arg use_mock_hardware)"
+    mock_sensor_commands="$(arg mock_sensor_commands)"
+    sim_gazebo_classic="$(arg sim_gazebo_classic)"
+    sim_gazebo="$(arg sim_gazebo)"
+    simulation_controllers="$(arg simulation_controllers)"
+    device_path="$(arg device_path)"
+    channel_fl="$(arg channel_fl)"
+    channel_fr="$(arg channel_fr)"
+    channel_rl="$(arg channel_rl)"
+    channel_rr="$(arg channel_rr)"
+    pwm_min="$(arg pwm_min)"
+    pwm_neutral="$(arg pwm_neutral)"
+    pwm_max="$(arg pwm_max)"
+    min_active_pwm_delta="$(arg min_active_pwm_delta)"
+    wheel_radius="$(arg wheel_radius)"
+    max_wheel_speed_mps="$(arg max_wheel_speed_mps)"
+    invert_left="$(arg invert_left)"
+    invert_right="$(arg invert_right)"
+    invert_fl="$(arg invert_fl)"
+    invert_fr="$(arg invert_fr)"
+    invert_rl="$(arg invert_rl)"
+    invert_rr="$(arg invert_rr)"/>
+
+</robot>

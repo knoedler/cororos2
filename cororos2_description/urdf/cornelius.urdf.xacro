@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="cornelius">
+
+  <xacro:arg name="prefix" default=""/>
+
+  <xacro:arg name="use_mock_hardware" default="false"/>
+  <xacro:arg name="mock_sensor_commands" default="false"/>
+  <xacro:arg name="sim_gazebo_classic" default="false"/>
+  <xacro:arg name="sim_gazebo" default="false"/>
+  <xacro:arg name="simulation_controllers" default=""/>
+  <xacro:arg name="attach_world" default="true"/>
+  <xacro:arg name="roboclaw_config_file" default="$(find cororos2_bringup)/config/roboclaw.yaml"/>
+  <xacro:property name="roboclaw_config" value="${xacro.load_yaml('$(arg roboclaw_config_file)')}"/>
+  <xacro:arg name="roboclaw_device" default="${roboclaw_config['device']}"/>
+  <xacro:arg name="roboclaw_baud" default="${roboclaw_config['baud']}"/>
+  <xacro:arg name="roboclaw_address" default="${roboclaw_config['address']}"/>
+  <xacro:arg name="roboclaw_use_encoder" default="${roboclaw_config['use_encoder']}"/>
+  <xacro:arg name="roboclaw_max_speed" default="${roboclaw_config['max_speed']}"/>
+  <xacro:arg name="roboclaw_ticks_at_max_speed" default="${roboclaw_config['ticks_at_max_speed']}"/>
+  <xacro:arg name="roboclaw_acceleration" default="${roboclaw_config['acceleration']}"/>
+  <xacro:arg name="roboclaw_ticks_per_meter" default="${roboclaw_config['ticks_per_meter']}"/>
+  <xacro:arg name="roboclaw_wheel_radius" default="${roboclaw_config['wheel_radius']}"/>
+  <xacro:arg name="roboclaw_status_interval_sec" default="${roboclaw_config['status_interval_sec']}"/>
+
+  <xacro:include filename="$(find cororos2_description)/urdf/cornelius/cornelius_macro.xacro"/>
+  <xacro:include filename="$(find cororos2_description)/urdf/cornelius/cornelius_macro.ros2_control.xacro"/>
+
+  <xacro:if value="$(arg attach_world)">
+    <link name="world"/>
+
+    <xacro:cornelius prefix="$(arg prefix)" parent="world">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:cornelius>
+  </xacro:if>
+
+  <xacro:unless value="$(arg attach_world)">
+    <xacro:cornelius prefix="$(arg prefix)" parent="">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:cornelius>
+  </xacro:unless>
+
+  <xacro:cornelius_ros2_control
+    name="cornelius"
+    prefix="$(arg prefix)"
+    use_mock_hardware="$(arg use_mock_hardware)"
+    mock_sensor_commands="$(arg mock_sensor_commands)"
+    sim_gazebo_classic="$(arg sim_gazebo_classic)"
+    sim_gazebo="$(arg sim_gazebo)"
+    simulation_controllers="$(arg simulation_controllers)"
+    roboclaw_device="$(arg roboclaw_device)"
+    roboclaw_baud="$(arg roboclaw_baud)"
+    roboclaw_address="$(arg roboclaw_address)"
+    roboclaw_use_encoder="$(arg roboclaw_use_encoder)"
+    roboclaw_max_speed="$(arg roboclaw_max_speed)"
+    roboclaw_ticks_at_max_speed="$(arg roboclaw_ticks_at_max_speed)"
+    roboclaw_acceleration="$(arg roboclaw_acceleration)"
+    roboclaw_ticks_per_meter="$(arg roboclaw_ticks_per_meter)"
+    roboclaw_wheel_radius="$(arg roboclaw_wheel_radius)"
+    roboclaw_status_interval_sec="$(arg roboclaw_status_interval_sec)"/>
+
+</robot>

@@ -1,0 +1,130 @@
+<!--
+Copyright (c) 2026, b-robotized Group
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+Source of this file are templates maintained by b-robotized Group.
+
+Authors: Riyan Jose, Manuel Muth, Dr. Denis
+-->
+
+<launch>
+  <!-- standalone sensor bringup -->
+  <arg name="robot_model"
+       default="allie"
+       description="Robot model whose sensor stack should be launched. Choices are: [allie, cornelius, joe].">
+    <choice value="allie"/>
+    <choice value="cornelius"/>
+    <choice value="joe"/>
+  </arg>
+  <arg name="runtime_config_package"
+       default="cororos2_bringup"
+       description="Package with the controller configuration in the config folder."/>
+  <arg name="prefix"
+       default=""
+       description="Prefix of the joint names, useful for multi-robot setups."/>
+
+  <arg name="use_lidar"
+       default="true"
+       description="Start the robot lidar driver stack."/>
+  <arg name="use_realsense"
+       default="true"
+       description="Start the Intel RealSense D455 driver."/>
+  <arg name="use_gps"
+       default="true"
+       description="Start the u-blox ZED-F9P GPS driver."/>
+  <arg name="use_memsense"
+       default="true"
+       description="Start the Memsense MS-IMU3025 driver."/>
+  <arg name="use_memsense_filter"
+       default="true"
+       description="Start the Madgwick orientation filter on top of the raw Memsense IMU stream."/>
+
+  <!-- runtime-selectable sensor device selectors -->
+  <arg name="ouster_sensor_hostname" default="169.254.148.98" description="Sensor hostname or IP for the Ouster OS0-128."/>
+  <arg name="ouster_udp_dest" default="169.254.240.178" description="Destination IP for Ouster UDP packets."/>
+  <arg name="velodyne_device_ip" default="" description="Optional device IP used to filter Velodyne packets from the VLP-16."/>
+  <arg name="realsense_serial_no" default="''" description="Optional RealSense serial number used to select the D455 device."/>
+  <arg name="gps_device" default="/dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver-if00" description="Serial device used by the u-blox ZED-F9P receiver."/>
+  <arg name="memsense_device" default="/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0" description="Serial device used by the Memsense MS-IMU3025 receiver."/>
+
+  <group if="$(eval '\'$(var robot_model)\' == \'allie\' or \'$(var robot_model)\' == \'cornelius\'')">
+    <include if="$(var use_lidar)" file="$(find-pkg-share ouster_ros)/launch/sensor.launch.xml">
+      <arg name="ouster_ns" value="ouster_lidar"/>
+      <arg name="sensor_hostname" value="$(var ouster_sensor_hostname)"/>
+      <arg name="udp_dest" value="$(var ouster_udp_dest)"/>
+      <arg name="viz" value="false"/>
+      <arg name="pub_static_tf" value="false"/>
+      <arg name="point_type" value="xyzir"/>
+      <arg name="timestamp_mode" value="TIME_FROM_ROS_TIME"/>
+      <arg name="lidar_mode" value="1024x10"/>
+      <arg name="lidar_port" value="7502"/>
+      <arg name="imu_port" value="7503"/>
+      <arg name="sensor_frame" value="$(var prefix)ouster_link"/>
+      <arg name="lidar_frame" value="$(var prefix)ouster_link"/>
+      <arg name="imu_frame" value="$(var prefix)ouster_imu_link"/>
+      <arg name="point_cloud_frame" value="$(var prefix)ouster_link"/>
+    </include>
+  </group>
+
+  <group if="$(eval '\'$(var robot_model)\' == \'joe\'')">
+    <node if="$(var use_lidar)" pkg="velodyne_driver" exec="velodyne_driver_node" namespace="velodyne_lidar" name="velodyne_driver_node" output="both">
+      <param from="$(find-pkg-share velodyne_driver)/config/VLP16-velodyne_driver_node-params.yaml"/>
+      <param from="$(find-pkg-share $(var runtime_config_package))/config/velodyne_driver.yaml"/>
+      <param name="device_ip" value="$(var velodyne_device_ip)"/>
+    </node>
+
+    <node if="$(var use_lidar)" pkg="velodyne_pointcloud" exec="velodyne_transform_node" namespace="velodyne_lidar" name="velodyne_transform_node" output="both">
+      <param from="$(find-pkg-share velodyne_pointcloud)/config/VLP16-velodyne_transform_node-params.yaml"/>
+      <param from="$(find-pkg-share $(var runtime_config_package))/config/velodyne_transform.yaml"/>
+      <param name="calibration" value="$(find-pkg-share velodyne_pointcloud)/params/VLP16db.yaml"/>
+    </node>
+
+    <node if="$(var use_lidar)" pkg="velodyne_laserscan" exec="velodyne_laserscan_node" namespace="velodyne_lidar" name="velodyne_laserscan_node" output="both">
+      <param from="$(find-pkg-share velodyne_laserscan)/config/default-velodyne_laserscan_node-params.yaml"/>
+    </node>
+  </group>
+
+  <node if="$(var use_realsense)" pkg="realsense2_camera" exec="realsense2_camera_node" namespace="camera" name="d455" output="both"
+        args="--ros-args --log-level info">
+    <param from="$(find-pkg-share $(var runtime_config_package))/config/realsense.yaml"/>
+    <param name="serial_no" value="$(var realsense_serial_no)"/>
+    <param name="base_frame_id" value="$(var prefix)rgbd_front_link"/>
+  </node>
+
+  <node if="$(var use_gps)" pkg="ublox_gps" exec="ublox_gps_node" name="ublox_gps_node" output="both">
+    <param from="$(find-pkg-share $(var runtime_config_package))/config/ublox.yaml"/>
+    <param name="device" value="$(var gps_device)"/>
+  </node>
+
+  <node if="$(var use_memsense)" pkg="memsense_msimu3025_driver" exec="msimu3025_driver" name="msimu3025_driver" output="both">
+    <param from="$(find-pkg-share $(var runtime_config_package))/config/memsense.yaml"/>
+    <param name="serial_path_msimu3025" value="$(var memsense_device)"/>
+    <param name="imu_topic" value="/$(var robot_model)/imu/data_raw"/>
+    <param name="magnetic_topic" value="/$(var robot_model)/imu/mag"/>
+    <param name="temperature_topic" value="/$(var robot_model)/imu/temperature"/>
+  </node>
+
+  <node if="$(eval '\'$(var use_memsense)\' == \'true\' and \'$(var use_memsense_filter)\' == \'true\'')"
+        pkg="imu_filter_madgwick"
+        exec="imu_filter_madgwick_node"
+        namespace="$(var robot_model)"
+        name="imu_filter"
+        output="both">
+    <param from="$(find-pkg-share $(var runtime_config_package))/config/imu_filter_madgwick.yaml"/>
+    <remap from="imu/data_raw" to="/$(var robot_model)/imu/data_raw"/>
+    <remap from="imu/data" to="/$(var robot_model)/imu/data"/>
+    <remap from="imu/mag" to="/$(var robot_model)/imu/mag"/>
+  </node>
+</launch>

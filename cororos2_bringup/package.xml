@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>cororos2_bringup</name>
+  <version>0.0.0</version>
+  <description>Unified robot bringup package for Allie, Cornelius, and Joe.</description>
+  <maintainer email="gabriela.vitez@b-robotized.com">Gabriela Vitez</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>cororos2_description</exec_depend>
+  <exec_depend>diff_drive_controller</exec_depend>
+  <exec_depend>gz_ros2_control</exec_depend>
+  <exec_depend>joint_state_broadcaster</exec_depend>
+  <exec_depend>imu_filter_madgwick</exec_depend>
+  <exec_depend>memsense_msimu3025_driver</exec_depend>
+  <exec_depend>odrive_hardware_interface</exec_depend>
+  <exec_depend>ouster_ros</exec_depend>
+  <exec_depend>pwm_hardware_interface</exec_depend>
+  <exec_depend>realsense2_camera</exec_depend>
+  <exec_depend>rmw_zenoh_cpp</exec_depend>
+  <exec_depend>roboclaw_hardware_interface</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>ublox_gps</exec_depend>
+  <exec_depend>velodyne_driver</exec_depend>
+  <exec_depend>velodyne_laserscan</exec_depend>
+  <exec_depend>velodyne_pointcloud</exec_depend>
+  <exec_depend>xacro</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

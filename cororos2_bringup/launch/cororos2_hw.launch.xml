@@ -1,0 +1,121 @@
+<!--
+Copyright (c) 2026, b-robotized Group
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+Source of this file are templates maintained by b-robotized Group.
+
+Authors: Riyan Jose, Manuel Muth, Dr. Denis
+-->
+
+<launch>
+  <!-- wrapper for hardware robot bringup plus sensors -->
+  <arg name="robot_model"
+       default="allie"
+       description="Robot model to bring up on hardware. Choices are: [allie, cornelius, joe].">
+    <choice value="allie"/>
+    <choice value="cornelius"/>
+    <choice value="joe"/>
+  </arg>
+  <arg name="runtime_config_package"
+       default="cororos2_bringup"
+       description="Package with the controller configuration in the config folder."/>
+  <arg name="description_package"
+       default="cororos2_description"
+       description="Description package with shared robot URDF/xacro files."/>
+  <arg name="controllers_file"
+       default=""
+       description="Optional YAML file (without extension) with the controller configuration override."/>
+  <arg name="prefix"
+       default=""
+       description="Prefix of the joint names, useful for multi-robot setups."/>
+  <arg name="robot_controller"
+       default="diff_drive_controller"
+       description="Robot controller to start. Choices are: [diff_drive_controller]."/>
+  <arg name="rviz"
+       default="true"
+       description="Launch RViz alongside the selected robot bringup."/>
+
+  <arg name="pwm_device_path"
+       default="/dev/serial/by-id/usb-Pololu_Corporation_Pololu_Micro_Maestro_6-Servo_Controller_00357982-if00"
+       description="Serial device used by the Maestro PWM controller."/>
+  <arg name="roboclaw_device"
+       default="/dev/serial/by-id/usb-03eb_USB_Roboclaw_2x60A-if00"
+       description="Serial device used by the Roboclaw controller."/>
+  <arg name="roboclaw_use_encoder"
+       default="false"
+       description="Use Roboclaw encoder feedback for Cornelius hardware bringup."/>
+  <arg name="odrive_front_serial_number"
+       default=""
+       description="USB serial number of the front ODrive v3.6 board."/>
+  <arg name="odrive_rear_serial_number"
+       default=""
+       description="USB serial number of the rear ODrive v3.6 board."/>
+
+  <arg name="use_lidar"
+       default="true"
+       description="Start the robot lidar driver stack as part of hardware bringup."/>
+  <arg name="use_realsense"
+       default="true"
+       description="Start the Intel RealSense D455 driver as part of hardware bringup."/>
+  <arg name="use_gps"
+       default="true"
+       description="Start the u-blox ZED-F9P GPS driver as part of hardware bringup."/>
+  <arg name="use_memsense"
+       default="true"
+       description="Start the Memsense MS-IMU3025 driver as part of hardware bringup."/>
+  <arg name="use_memsense_filter"
+       default="true"
+       description="Start the Madgwick orientation filter for the Memsense IMU."/>
+  <arg name="ouster_sensor_hostname" default="169.254.148.98" description="Sensor hostname or IP for the Ouster OS0-128."/>
+  <arg name="ouster_udp_dest" default="169.254.240.178" description="Destination IP for Ouster UDP packets."/>
+  <arg name="velodyne_device_ip" default="" description="Optional device IP used to filter Velodyne packets from the VLP-16."/>
+  <arg name="realsense_serial_no" default="''" description="Optional RealSense serial number used to select the D455 device."/>
+  <arg name="gps_device" default="/dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver-if00" description="Serial device used by the u-blox ZED-F9P receiver."/>
+  <arg name="memsense_device" default="/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0" description="Serial device used by the Memsense MS-IMU3025 receiver."/>
+
+  <include file="$(find-pkg-share cororos2_bringup)/launch/cororos2_bringup.launch.xml">
+    <arg name="robot_model" value="$(var robot_model)"/>
+    <arg name="runtime_config_package" value="$(var runtime_config_package)"/>
+    <arg name="description_package" value="$(var description_package)"/>
+    <arg name="controllers_file" value="$(var controllers_file)"/>
+    <arg name="prefix" value="$(var prefix)"/>
+    <arg name="use_mock_hardware" value="false"/>
+    <arg name="mock_sensor_commands" value="false"/>
+    <arg name="robot_controller" value="$(var robot_controller)"/>
+    <arg name="rviz" value="$(var rviz)"/>
+    <arg name="pwm_device_path" value="$(var pwm_device_path)"/>
+    <arg name="roboclaw_device" value="$(var roboclaw_device)"/>
+    <arg name="roboclaw_use_encoder" value="$(var roboclaw_use_encoder)"/>
+    <arg name="odrive_front_serial_number" value="$(var odrive_front_serial_number)"/>
+    <arg name="odrive_rear_serial_number" value="$(var odrive_rear_serial_number)"/>
+  </include>
+
+  <include file="$(find-pkg-share cororos2_bringup)/launch/cororos2_sensors.launch.xml">
+    <arg name="robot_model" value="$(var robot_model)"/>
+    <arg name="runtime_config_package" value="$(var runtime_config_package)"/>
+    <arg name="prefix" value="$(var prefix)"/>
+    <arg name="use_lidar" value="$(var use_lidar)"/>
+    <arg name="use_realsense" value="$(var use_realsense)"/>
+    <arg name="use_gps" value="$(var use_gps)"/>
+    <arg name="use_memsense" value="$(var use_memsense)"/>
+    <arg name="use_memsense_filter" value="$(var use_memsense_filter)"/>
+    <arg name="ouster_sensor_hostname" value="$(var ouster_sensor_hostname)"/>
+    <arg name="ouster_udp_dest" value="$(var ouster_udp_dest)"/>
+    <arg name="velodyne_device_ip" value="$(var velodyne_device_ip)"/>
+    <arg name="realsense_serial_no" value="$(var realsense_serial_no)"/>
+    <arg name="gps_device" value="$(var gps_device)"/>
+    <arg name="memsense_device" value="$(var memsense_device)"/>
+  </include>
+</launch>

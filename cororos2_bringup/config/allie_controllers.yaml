@@ -1,0 +1,67 @@
+# Copyright (c) 2026, b-robotized Group
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Source of this file are templates in https://github.com/StoglRobotics/ros_team_workspace repository.
+
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+diff_drive_controller:
+  ros__parameters:
+    left_wheel_names:
+      - front_left_wheel_joint
+      - rear_left_wheel_joint
+    right_wheel_names:
+      - front_right_wheel_joint
+      - rear_right_wheel_joint
+
+    wheel_separation: 0.51
+    wheel_radius: 0.2
+    wheels_per_side: 2
+
+    publish_rate: 50.0
+    base_frame_id: base_footprint
+    odom_frame_id: odom
+    enable_odom_tf: true
+    cmd_vel_timeout: 0.5
+
+    velocity_rolling_window_size: 10
+    publish_limited_velocity: true
+    position_feedback: true
+    open_loop: true
+
+    linear.x.has_velocity_limits: true
+    linear.x.max_velocity: 1.0
+    linear.x.min_velocity: -1.0
+    linear.x.has_acceleration_limits: true
+    linear.x.max_acceleration: 10.0
+    linear.x.max_deceleration: -10.0
+    linear.x.max_acceleration_reverse: -10.0
+    linear.x.max_deceleration_reverse: 10.0
+
+    angular.z.has_velocity_limits: true
+    angular.z.max_velocity: 4.0
+    angular.z.min_velocity: -4.0
+    angular.z.has_acceleration_limits: true
+    angular.z.max_acceleration: 10.0
+    angular.z.max_deceleration: -10.0
+    angular.z.max_acceleration_reverse: -10.0
+    angular.z.max_deceleration_reverse: 10.0

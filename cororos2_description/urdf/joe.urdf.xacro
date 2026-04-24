@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="joe">
+  <xacro:arg name="prefix" default=""/>
+  <xacro:arg name="use_mock_hardware" default="false"/>
+  <xacro:arg name="mock_sensor_commands" default="false"/>
+  <xacro:arg name="sim_gazebo_classic" default="false"/>
+  <xacro:arg name="sim_gazebo" default="false"/>
+  <xacro:arg name="simulation_controllers" default=""/>
+  <xacro:arg name="attach_world" default="true"/>
+  <xacro:arg name="odrive_config_file" default="$(find cororos2_bringup)/config/odrive.yaml"/>
+  <xacro:property name="odrive_config" value="${xacro.load_yaml('$(arg odrive_config_file)')}"/>
+  <xacro:arg name="python_executable" default="${odrive_config['python_executable']}"/>
+  <xacro:arg name="front_serial_number" default="${odrive_config['front_serial_number']}"/>
+  <xacro:arg name="rear_serial_number" default="${odrive_config['rear_serial_number']}"/>
+  <xacro:arg name="front_right_axis" default="${odrive_config['front_right_axis']}"/>
+  <xacro:arg name="rear_right_axis" default="${odrive_config['rear_right_axis']}"/>
+  <xacro:arg name="connect_timeout" default="${odrive_config['connect_timeout']}"/>
+
+  <xacro:include filename="$(find cororos2_description)/urdf/joe/joe_macro.xacro"/>
+  <xacro:include filename="$(find cororos2_description)/urdf/joe/joe_macro.ros2_control.xacro"/>
+
+  <xacro:if value="$(arg attach_world)">
+    <link name="world"/>
+    <xacro:joe prefix="$(arg prefix)" parent="world">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:joe>
+  </xacro:if>
+
+  <xacro:unless value="$(arg attach_world)">
+    <xacro:joe prefix="$(arg prefix)" parent="">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:joe>
+  </xacro:unless>
+
+  <xacro:joe_ros2_control
+    name="joe"
+    prefix="$(arg prefix)"
+    use_mock_hardware="$(arg use_mock_hardware)"
+    mock_sensor_commands="$(arg mock_sensor_commands)"
+    sim_gazebo_classic="$(arg sim_gazebo_classic)"
+    sim_gazebo="$(arg sim_gazebo)"
+    simulation_controllers="$(arg simulation_controllers)"
+    python_executable="$(arg python_executable)"
+    front_serial_number="$(arg front_serial_number)"
+    rear_serial_number="$(arg rear_serial_number)"
+    front_right_axis="$(arg front_right_axis)"
+    rear_right_axis="$(arg rear_right_axis)"
+    connect_timeout="$(arg connect_timeout)"/>
+</robot>

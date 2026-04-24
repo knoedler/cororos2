@@ -1,0 +1,101 @@
+<!--
+Copyright (c) 2026, b-robotized Group
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+Source of this file are templates in https://github.com/StoglRobotics/ros_team_workspace repository.
+
+Authors: Riyan Jose, Manuel Muth, Dr. Denis
+-->
+
+<launch>
+  <!-- Gazebo bringup -->
+  <arg name="robot_model"
+       default="allie"
+       description="Robot model to spawn in Gazebo. Choices are: [allie, cornelius, joe].">
+    <choice value="allie"/>
+    <choice value="cornelius"/>
+    <choice value="joe"/>
+  </arg>
+  <arg name="gz_args"
+       default="-r $(find-pkg-share cororos2_bringup)/worlds/environment.sdf"
+       description="Arguments passed to Gazebo Sim. Use '-r -s empty.sdf' for headless server only."/>
+  <arg name="rviz"
+       default="true"
+       description="Launch RViz alongside Gazebo."/>
+
+  <let name="selected_urdf_file"
+       value="$(eval '\'allie.urdf.xacro\' if \'$(var robot_model)\' == \'allie\' else \'cornelius.urdf.xacro\' if \'$(var robot_model)\' == \'cornelius\' else \'joe.urdf.xacro\'')"/>
+  <let name="selected_controllers_file"
+       value="$(eval '\'allie_controllers.yaml\' if \'$(var robot_model)\' == \'allie\' else \'cornelius_encoder_controllers.yaml\' if \'$(var robot_model)\' == \'cornelius\' else \'joe_controllers.yaml\'')"/>
+  <let name="selected_lidar_sensor"
+       value="$(eval '\'ouster_lidar\' if \'$(var robot_model)\' == \'allie\' or \'$(var robot_model)\' == \'cornelius\' else \'lidar\'')"/>
+
+  <let name="lidar_root"
+       value="$(eval '\'/world/empty/model/$(var robot_model)/link/base_footprint/sensor/$(var selected_lidar_sensor)\'')"/>
+  <let name="rgbd_root"
+       value="$(eval '\'/world/empty/model/$(var robot_model)/link/base_footprint/sensor/rgbd_front\'')"/>
+
+  <set_env name="GZ_SIM_RESOURCE_PATH"
+           value="$(find-pkg-share cororos2_description)/..:$(find-pkg-share cororos2_bringup)/..:$(env GZ_SIM_RESOURCE_PATH '')"/>
+
+  <let name="robot_description_content"
+       value="$(command '$(find-exec xacro) $(find-pkg-share cororos2_description)/urdf/$(var selected_urdf_file) prefix:= use_mock_hardware:=false mock_sensor_commands:=false sim_gazebo_classic:=false sim_gazebo:=true attach_world:=false simulation_controllers:=$(find-pkg-share cororos2_bringup)/config/$(var selected_controllers_file)')"/>
+
+  <include file="$(find-pkg-share ros_gz_sim)/launch/gz_sim.launch.py">
+    <arg name="gz_args" value="$(var gz_args)"/>
+  </include>
+
+  <node pkg="robot_state_publisher" exec="robot_state_publisher" output="both">
+    <param name="robot_description" value="$(var robot_description_content)"/>
+    <param name="use_sim_time" value="true"/>
+  </node>
+
+  <node pkg="ros_gz_sim" exec="create" output="screen">
+    <param name="name" value="$(var robot_model)"/>
+    <param name="topic" value="robot_description"/>
+    <param name="x" value="0.0"/>
+    <param name="y" value="0.0"/>
+    <param name="z" value="0.0"/>
+  </node>
+
+  <node pkg="ros_gz_bridge" exec="parameter_bridge" output="screen"
+        args="/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"/>
+
+  <node pkg="ros_gz_bridge" exec="parameter_bridge" output="screen"
+        args="/imu@sensor_msgs/msg/Imu[gz.msgs.IMU /navsat@sensor_msgs/msg/NavSatFix[gz.msgs.NavSat $(var lidar_root)/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan $(var lidar_root)/scan/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked $(var rgbd_root)/image@sensor_msgs/msg/Image[gz.msgs.Image $(var rgbd_root)/depth_image@sensor_msgs/msg/Image[gz.msgs.Image $(var rgbd_root)/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked $(var rgbd_root)/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo">
+    <remap from="/imu" to="/$(var robot_model)/imu/data"/>
+    <remap from="/navsat" to="/$(var robot_model)/gps/fix"/>
+    <remap from="$(var lidar_root)/scan" to="/$(var robot_model)/lidar/scan"/>
+    <remap from="$(var lidar_root)/scan/points" to="/$(var robot_model)/lidar/points"/>
+    <remap from="$(var rgbd_root)/image" to="/$(var robot_model)/rgbd_front/image_raw"/>
+    <remap from="$(var rgbd_root)/depth_image" to="/$(var robot_model)/rgbd_front/depth_image"/>
+    <remap from="$(var rgbd_root)/points" to="/$(var robot_model)/rgbd_front/points"/>
+    <remap from="$(var rgbd_root)/camera_info" to="/$(var robot_model)/rgbd_front/camera_info"/>
+  </node>
+
+  <node pkg="controller_manager" exec="spawner"
+        args="joint_state_broadcaster --controller-manager /controller_manager"
+        output="screen"/>
+
+  <node pkg="controller_manager" exec="spawner"
+        args="diff_drive_controller --controller-manager /controller_manager"
+        output="screen"/>
+
+  <node if="$(var rviz)" pkg="rviz2" exec="rviz2" output="log"
+        args="-d $(find-pkg-share cororos2_description)/rviz/cororos2.rviz">
+    <param name="use_sim_time" value="true"/>
+    <env name="LC_ALL" value="en_US.UTF-8"/>
+  </node>
+</launch>
